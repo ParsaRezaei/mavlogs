@@ -1,4 +1,6 @@
-pandas==2.2.3
-pymavlink==2.4.42
-rich==13.9.4
-
+pandas>=2.0
+numpy>=1.25
+pymavlink>=2.4
+rich>=13.0
+matplotlib>=3.7
+openpyxl>=3.1

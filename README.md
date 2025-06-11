@@ -2,169 +2,193 @@
 # ArduPilot BIN File Parser, Cleaner, and Analyzer
 
 ## Overview
-This Python script processes ArduPilot `.bin` files, converts them into `.csv` files, cleans the data, and analyzes it. The tool provides an efficient workflow for handling large sets of log data, cleaning it by removing unnecessary columns, and producing detailed insights.
 
-Key features include:
-- **BIN to CSV conversion**: Parses `.bin` files into structured `.csv` files.
-- **Data cleaning**: Removes columns with all missing values or constant values.
-- **Analysis and statistics**: Displays key metrics, missing value analysis, and duplicates in a formatted terminal output.
-- **User-friendly terminal interface**: Uses the `rich` library for clean, styled terminal output.
+This Python toolchain converts ArduPilot `log files into tidy` datasets, cleans them, and produces quick‑look analytics. It is designed for large log sets and emphasises terminal‑first ergonomics using the **rich** library for styled output.
+
+Key capabilities
+
+* **BIN → CSV** conversion via *pymavlink*
+* Column pruning (all‑null & constant)
+* One‑command batch processing of an entire *logs/bin* folder
+* Lightweight descriptive statistics & anomaly flags
+* Clearly organised output directories (raw, clean, reports, plots)
 
 ---
 
 ## Features
-1. **BIN to CSV Parsing**:
-   - Reads `.bin` log files using the `pymavlink` library.
-   - Converts parsed messages into a `pandas` DataFrame.
-   - Saves the DataFrame as a raw `.csv` file.
 
-2. **Data Cleaning**:
-   - Groups data by `mavpackettype`.
-   - Drops columns with all missing values or constant values.
-   - Combines and saves cleaned data into a new `.csv` file.
-
-3. **Data Analysis**:
-   - Provides:
-     - Total rows and columns.
-     - Number of duplicate rows.
-   - Identifies and removes redundant or problematic columns.
-
-4. **Directory Structure**:
-   - **Input**: All `.bin` files should be placed in the `logs/bin` directory.
-   - **Output**:
-     - Raw CSVs are saved in `logs/raw` (prefixed with `RAW_`).
-     - Cleaned CSVs are saved in `logs/clean` (prefixed with `CLEAN_`).
+1. **BIN → CSV Parsing** – reads each log with  *pymavlink* , streams messages into a `pandas.DataFrame`, then persists `RAW_<name>.csv` to  *logs/raw* .
+2. **Data Cleaning** – groups by `mavpackettype`, removes empty & constant columns, and writes a consolidated `CLEAN_<name>.csv` to  *logs/clean* .
+3. **Quick Analysis** – prints row/column counts, duplicate counts, and drops constant columns in‑place.
+4. **Progress‑Aware CLI** – rich progress bars keep long conversions transparent.
 
 ---
 
 ## Requirements
-### Python Packages
-- `pandas`: For data manipulation.
-- `pymavlink`: For parsing ArduPilot `.bin` files.
-- `rich`: For styled terminal output.
 
-### Installation
-Install the required packages:
+### Option A — install via *requirements.txt*
+
 ```bash
-pip install pandas pymavlink rich
+pip install -r requirements.txt
+```
+
+### Option B — one‑liner
+
+```bash
+pip install pandas numpy pymavlink rich matplotlib openpyxl
+```
+
+> Tested with **Python 3.9+** on Linux and macOS.
+
+```
+pandas>=2.0
+numpy>=1.25
+pymavlink>=2.4
+rich>=13.0
+matplotlib>=3.7
+openpyxl>=3.1
 ```
 
 ---
 
-## Directory Structure
-Ensure the following directory structure exists:
+## Directory Layout
+
 ```
 logs/
-├── bin/       # Place all .bin files here
-├── raw/       # Raw CSV files will be saved here
-└── clean/     # Cleaned CSV files will be saved here
+├── bin/      # place .bin files here
+├── raw/      # RAW_*.csv written here
+├── clean/    # CLEAN_*.csv written here
+└── reports/  # summary statistics & decoded tables (auto‑created)
 ```
+
+> **Tip** : All folders are created on‑the‑fly if they do not exist.
+
+---
+
+## Python Scripts
+
+| Script                              | Purpose                                                                                                                                                                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `logs.py`(alias: process_logs.py) | End‑to‑end pipeline that converts ``** → RAW CSV → CLEAN CSV**, prints rich‑style stats, and stores artefacts under `logs/raw`,`logs/clean`.                                                                                     |
+| `summary.py`                      | Post‑processing helper that ingests**CLEAN CSV**files plus parameter glossaries to generate summaries, decoded error tables, anomaly flags, and share‑ready plots. Accepts single files (`--csv`) or whole folders (`--dir`). |
 
 ---
 
 ## Usage
-### Step 1: Place `.bin` Files
-Place all `.bin` files to be processed in the `logs/bin` directory.
 
-### Step 2: Run the Script
-Run the script from the terminal:
 ```bash
-python process_logs.py
-```
-
-### Step 3: View Results
-- **Raw CSVs**: Located in the `logs/raw` directory (prefixed with `RAW_`).
-- **Cleaned CSVs**: Located in the `logs/clean` directory (prefixed with `CLEAN_`).
-- **Analysis Output**: Displayed in the terminal.
-
----
-
-## Code Walkthrough
-### Main Components
-
-#### 1. Parsing BIN Files
-The `parse_bin_to_dataframe` function:
-- Reads messages from a `.bin` file.
-- Converts them to a `pandas` DataFrame.
-- Saves the raw data as a CSV.
-
-```python
-def parse_bin_to_dataframe(bin_path, csv_path):
-    log = mavutil.mavlink_connection(bin_path)
-    messages = []
-    with Progress(...):
-        while True:
-            msg = log.recv_match()
-            if msg is None:
-                break
-            messages.append(msg.to_dict())
-    df = pd.DataFrame(messages)
-    df.to_csv(csv_path, index=False)
-    return df
-```
-
-#### 2. Cleaning Data
-The `clean_and_combine_data` function:
-- Groups the DataFrame by `mavpackettype`.
-- Drops all-null columns.
-- Combines cleaned data into a single DataFrame.
-
-```python
-def clean_and_combine_data(df):
-    grouped = df.groupby('mavpackettype')
-    combined_df = pd.DataFrame()
-    for packet_type, group_df in grouped:
-        all_null_columns = group_df.columns[group_df.isnull().all()]
-        group_df_cleaned = group_df.drop(columns=all_null_columns)
-        combined_df = pd.concat([combined_df, group_df_cleaned], axis=0)
-    return combined_df
-```
-
-#### 3. Analyzing Data
-The `analyze_dataframe` function:
-- Displays total rows and columns.
-- Identifies and removes constant columns.
-- Counts duplicate rows.
-
-```python
-def analyze_dataframe(df):
-    constant_columns = [col for col in df.columns if df[col].nunique() == 1]
-    df = df.drop(columns=constant_columns)
-    console.print(f"Total Rows: {df.shape[0]}")
-    console.print(f"Total Columns: {df.shape[1]}")
-    duplicate_count = df.duplicated().sum()
-    console.print(f"Duplicate Rows: {duplicate_count}")
+# 1. drop .bin files into logs/bin
+python process_logs.py         # 2. run the script
+                          # 3. read the rich output or open files in logs/
 ```
 
 ---
 
-## Example Terminal Output
-```plaintext
-📂 Processing BIN file: log_24.bin
-Parsing log_24.bin: 100% |███████████████████████████| 10,000/10,000 [00:10<00:00]
-✔️ Saved RAW CSV to logs/raw/RAW_log_24.csv
+## Generated Reports & Artefacts
 
-📦 Unique mavpackettypes: 15
-Cleaning packet types: 100% |████████████████████████| 15/15 [00:02<00:00]
-✔️ Cleaned and combined DataFrame with 20,000 rows and 50 columns
+After each run the script assembles a small bundle of value‑added artefacts inside ``.  The following table describes the contents (adapted from  *README.txt* ):
 
-🔍 Analyzing DataFrame...
-🗑️ Dropped constant columns: 5
-Total Rows: 20,000
-Total Columns: 45
-Duplicate Rows: 50
-✔️ Saved CLEAN CSV to logs/clean/CLEAN_log_24.csv
+| # | File                                                                         | Purpose                                                                                                                                                                                  |
+| - | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | `parameter_glossary.csv`/ **origin** :*Parameter_sheet.xlsx*       | Filtered glossary of every ArduPilot parameter (name, units, category, description). Useful for look‑ups & dashboard labels.                                                            |
+| 2 | `subsys_ecode_report.csv`/ **origin** :*SubSys_ErrCode_Sheet.xlsx* | Decoded mapping of `Subsys`+`ECode`pairs to human‑readable subsystem fault descriptions.                                                                                            |
+| 3 | `summary.csv`                                                              | High‑level flight statistics – duration, max altitude/voltage/current, mean current draw, vibration, max roll/pitch etc.                                                               |
+| 4 | `status_text_log.csv`                                                      | All `STATUSTEXT`strings emitted by the autopilot (e.g. *"PreArm: Compass not calibrated"* , *"EKF variance"* ).                                                                    |
+| 5 | `failsafe_report.csv`                                                      | Timeline of Radio / Battery / GCS failsafes.  Booleans indicate which flag tripped at each timestamp.                                                                                    |
+| 6 | `anomaly_flags.csv`                                                        | Row‑wise flags produced by simple heuristics:•**High Vibration**≥ 30 (VibeX/Y/Z)•**Low Voltage**< 10.5 V•**High Current**> 50 A•**GPS Loss**< 6 sats |
+| 7 | `plots/`(folder)                                                           | PNG plots*plus*their raw `.csv`source for: altitude‑vs‑time, throttle‑vs‑altitude, 2‑D GPS path, roll‑pitch‑yaw, vibration, …                                                |
+
+*If **`subsys_ecode_report.csv`** or **`failsafe_report.csv`** are absent the flight contained no relevant events.*
+
+---
+
+## Customisation Pointers
+
+* Change destination folders by tweaking `RAW_DIR`, `CLEAN_DIR`, or `REPORT_DIR` constants at the top of  *process_logs.py* .
+* Extend `analyze_dataframe()` with your own KPIs or matplotlib visualisations.
+* Edit `ANOMALY_RULES` dict (inside the script) to alter threshold logic for `anomaly_flags.csv`.
+
+---
+
+## Example Session
+
+```text
+📂 Scanning logs/bin — found 3 files
+
+🔄 Converting  log_42.bin … 10,000/10,000 [00:09] ✅ RAW_log_42.csv
+🧹 Cleaning data … 15 packet types processed [00:02] ✅ CLEAN_log_42.csv
+📊 Summary written : reports/summary.csv
+⚠️ 0 failsafe events • 3 STATUSTEXT warnings decoded
+📈 Plots saved      : reports/plots/
 ```
 
----
+## Quick‑Start: `summary.py`
 
-## Customization
-You can modify:
-1. **Directories**: Change the `logs_dir`, `bin_dir`, `raw_dir`, or `clean_dir` paths.
-2. **Column Filtering**: Customize which columns to drop during cleaning in `clean_and_combine_data`.
-3. **Additional Analysis**: Add more statistics or visualizations to `analyze_dataframe`.
+### 1. Install prerequisites (first run only)
 
----
+```bash
+python3 -m venv logenv          # optional but recommended
+source logenv/bin/activate
+pip install pandas matplotlib numpy openpyxl
+```
 
-## Support
-If you encounter any issues, ensure the required directories exist, and dependencies are installed. For additional help, feel free to reach out!
+### 2. Put the required files together
+
+```
+project_folder/
+├── summary.py
+├── Parameter_sheet.xlsx          ← parameter glossary
+├── SubSys_ErrCode_Sheet.xlsx     ← SubSys + ECode decoder
+└── cleaned_logs/                 ← your “clean” CSVs
+    ├── log_001_clean.csv
+    ├── log_002_clean.csv
+    └── …
+```
+
+### 3. Process a single log (spot‑check)
+
+```bash
+python summary.py \
+  --csv cleaned_logs/log_001_clean.csv \
+  --glossary Parameter_sheet.xlsx \
+  --subsys SubSys_ErrCode_Sheet.xlsx
+```
+
+• Outputs land in `log_output/` (or change with `--out my_folder`).
+
+### 4. Batch‑process a folder
+
+```bash
+python summary.py \
+  --dir cleaned_logs \
+  --glossary Parameter_sheet.xlsx \
+  --subsys SubSys_ErrCode_Sheet.xlsx \
+  --outroot processed_logs
+```
+
+• Each CSV gets its own folder: `processed_logs/<ID>/…`.
+
+### 5. What’s inside each output folder
+
+| File                        | Purpose                                               |
+| --------------------------- | ----------------------------------------------------- |
+| `summary.csv`             | Flight duration, battery min/max, vibration peaks, … |
+| `parameter_glossary.csv`  | Decoded parameters (filtered glossary)                |
+| `subsys_ecode_report.csv` | `Subsys`/`ECode`ERR events, human‑readable       |
+| `status_text_log.csv`     | `STATUSTEXT`messages                                |
+| `failsafe_report.csv`     | Radio/Battery/GCS failsafe timeline                   |
+| `anomaly_flags.csv`       | High‑vibe, low‑volt, GPS‑loss flags                |
+| `plots/`                  | Ready‑to‑share PNGs + CSV data                      |
+| `full_export.zip`         | Everything above, zipped                              |
+
+### 6. Common tweaks
+
+* **Custom out folder (single log)** – `--out my_folder`
+* **Different batch root** – `--outroot my_processed_logs`
+* **Quiet run inside a script** – `python summary.py … > run.log 2>&1`
+
+### 7. Troubleshooting
+
+* **“No CSV files found”** – check `--dir` path and file extensions.
+* **ImportError** – ensure the *pip install* step ran inside the venv.
+* **Empty plots** – log may lack needed columns (Alt, Volt, VibeX…).

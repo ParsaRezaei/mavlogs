@@ -1,0 +1,28 @@
+﻿Column Name,Description,Units,Category,Notes
+TimeUS,Timestamp in microseconds since boot,µs,Time,Use Dt for delta between rows
+"Lat, Lng",GPS coordinates,deg,Position,
+Alt,Altitude (usually MSL),m,Position,"Check also AltAMSL, BAlt, DAlt, etc."
+"Roll, Pitch, Yaw",Attitude angles,deg,Orientation,Derived from EKF or IMU
+"DesRoll, DesPitch, DesYaw",Desired setpoints,deg,Orientation,
+Q1–Q4,Quaternion orientation,unitless,Orientation,Useful for smoother filtering/ML
+"VN, VE, VD",Velocity (N/E/Down),m/s,Kinematics,
+ThO,Throttle Output,%,Control,Used actuator command
+"ThI, ThH, ThrOut, ThLimit",Throttle control chain,%,Control,"Includes input, hover target, actuator output"
+"Volt, Curr, BatVolt, RemPct","Battery voltage, current, % remaining","V, A, %",Power,Good for reliability
+"CurrTot, EnrgTot",Total current & energy drawn,"A·s, Wh",Power,For energy profile
+"GPS, HDop, VDop, NSats","GPS status, accuracy, satellite count",—,GPS,Use Fix or Status for lock type
+"Mode, ModeNum, Rsn",Flight mode & reason,—,State,Can be mapped to named modes
+"ArmState, ArmChecks, Forced, Method",Arming info,—,System,Useful for detecting premature launches
+"Subsys, ECode",Error codes & subsystems,—,Diagnostics,Decoded in next table
+"MagX, MagY, MagZ",Magnetometer readings,µT,IMU,Anomalies here suggest interference
+"GyrX, GyrY, GyrZ",Angular rates,deg/s,IMU,
+"AccX, AccY, AccZ",Linear acceleration,m/s²,IMU,
+"VibeX, VibeY, VibeZ, Clip",Vibration data,m/s² or internal units,Health,Watch for high vibration spikes
+"Load, Mem, ErrL","CPU/memory usage, load factor",%,Diagnostics,Helpful for real-time system stress
+"RPM, RawRPM, MotTemp",Motor diagnostics,"RPM, °C",Powertrain,Good for thermal/electronic health
+FailFlags,Bitmask of failsafes triggered,—,System,"Decode to identify RTL, GPS fails, etc."
+"Fix, FIY, AFI",Fix quality indicators,—,GPS,
+"RelHomeAlt, RelOriginAlt",Relative altitudes from home/origin,m,Position,Used in terrain mapping
+"YawDes, Yaw, YawOut",Heading control chain,deg,Orientation,
+"SMS, Health, Status, Flags",System status flags,—,State,
+"SRate, Gain",PID tuning parameters,—,Control,Optional: track for adaptive control ML

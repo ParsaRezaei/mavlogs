@@ -1,0 +1,59 @@
+﻿Subsys,ECode,Name,Description
+0,0,NONE,No error
+2,0,RADIO,Errors Resolved
+2,2,RADIO,Late Frame
+3,0,COMPASS,Errors Resolved
+3,1,COMPASS,Failed to initialise
+3,4,COMPASS,Unhealthy
+5,0,RADIO_FAILSAFE,Failsafe Resolved
+5,1,RADIO_FAILSAFE,Failsafe Triggered
+6,0,BATTERY_FAILSAFE,Failsafe Resolved
+6,1,BATTERY_FAILSAFE,Failsafe Triggered
+8,0,GCS_FAILSAFE,Failsafe Resolved
+8,1,GCS_FAILSAFE,Failsafe Triggered
+9,0,FENCE_FAILSAFE,Failsafe Resolved
+9,1,FENCE_FAILSAFE,Altitude fence breach
+9,2,FENCE_FAILSAFE,Circular fence breach
+9,3,FENCE_FAILSAFE,Alt & Circular fence breach
+9,4,FENCE_FAILSAFE,Polygon fence breach
+10,1,MODE_CHANGE_FAIL,Vehicle unable to enter desired mode
+11,0,GPS,Glitch cleared
+11,2,GPS,GPS Glitch occurred
+12,1,CRASH_CHECK,Crash into ground detected
+12,2,CRASH_CHECK,Loss of control detected
+13,2,FLIP,Flip abandoned
+15,2,PARACHUTE,Not deployed - too low
+15,3,PARACHUTE,Not deployed - vehicle landed
+16,0,EKF_CHECK,Variance cleared
+16,2,EKF_CHECK,Bad Variance
+17,0,EKF_FAILSAFE,Failsafe Resolved
+17,1,EKF_FAILSAFE,Failsafe Triggered
+18,0,BAROMETER,Errors Resolved
+18,4,BAROMETER,Unhealthy
+19,0,CPU_WATCHDOG,Failsafe Resolved
+19,1,CPU_WATCHDOG,Failsafe Triggered
+20,0,ADSB_FAILSAFE,Failsafe Resolved
+20,1,ADSB_FAILSAFE,No action
+20,2,ADSB_FAILSAFE,Avoid by climbing/descending
+20,3,ADSB_FAILSAFE,Avoid by moving horizontally
+20,4,ADSB_FAILSAFE,Avoid perpendicular
+20,5,ADSB_FAILSAFE,RTL invoked
+21,2,TERRAIN_DATA,Missing terrain data
+22,2,NAVIGATION,Failed to set destination
+22,3,NAVIGATION,RTL restarted
+22,4,NAVIGATION,Circle initialisation failed
+22,5,NAVIGATION,Destination outside fence
+23,0,TERRAIN_FAILSAFE,Failsafe Resolved
+23,1,TERRAIN_FAILSAFE,Failsafe Triggered
+24,0,EKF_PRIMARY,1st EKF became primary
+24,1,EKF_PRIMARY,2nd EKF became primary
+25,0,THRUST_LOSS,Thrust restored
+25,1,THRUST_LOSS,Thrust loss detected
+26,0,SENSOR_FAILSAFE,Sensor Failsafe Cleared
+26,1,SENSOR_FAILSAFE,Sensor Failsafe Triggered
+27,0,LEAK_FAILSAFE,Leak Failsafe Cleared
+27,1,LEAK_FAILSAFE,Leak Detector Failsafe Triggered
+28,0,PILOT_TIMEOUT,Pilot Input Failsafe Cleared
+28,1,PILOT_TIMEOUT,Pilot Input Failsafe Triggered
+29,0,VIBRATION_FAILSAFE,Compensation Deactivated
+29,1,VIBRATION_FAILSAFE,Compensation Activated
