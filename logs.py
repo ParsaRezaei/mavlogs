@@ -125,6 +125,13 @@ if __name__ == "__main__":
     raw_dir = os.path.join(logs_dir, "raw")
     clean_dir = os.path.join(logs_dir, "clean")
 
+    # Check if logs directory exists
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir, exist_ok=True)
+        os.makedirs(bin_dir, exist_ok=True)
+        console.print(f"[red]Created missing 'logs' and 'logs/bin' directories. Please add your BIN files to 'logs/bin' and try again.[/red]")
+        exit(1)
+
     # Create output directories if they don't exist
     os.makedirs(raw_dir, exist_ok=True)
     os.makedirs(clean_dir, exist_ok=True)

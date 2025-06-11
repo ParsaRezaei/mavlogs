@@ -158,12 +158,13 @@ def analyze_log(csv_path, param_glossary_path, subsys_path, output_dir="log_outp
     )
 
     # === Zip all output ===
-    zip_path = f"{output_dir}/full_export.zip"
+    zip_path = os.path.abspath(f"{output_dir}/full_export.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, _, files in os.walk(output_dir):
             for f in files:
                 full = os.path.join(root, f)
-                if full != zip_path:  # avoid self-inclusion
+                # Avoid self-inclusion by comparing absolute paths
+                if os.path.abspath(full) != zip_path:
                     zf.write(full, os.path.relpath(full, output_dir))
 
 # ─────────────────────────── batch runner ──────────────────────────────── #

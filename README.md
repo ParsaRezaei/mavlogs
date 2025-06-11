@@ -1,9 +1,8 @@
-﻿
-# ArduPilot BIN File Parser, Cleaner, and Analyzer
+﻿# ArduPilot BIN File Parser, Cleaner, and Analyzer
 
 ## Overview
 
-This Python toolchain converts ArduPilot `log files into tidy` datasets, cleans them, and produces quick‑look analytics. It is designed for large log sets and emphasises terminal‑first ergonomics using the **rich** library for styled output.
+This Python toolchain converts ArduPilot log files into tidy datasets, cleans them, and produces quick‑look analytics. It is designed for large log sets and emphasises terminal‑first ergonomics using the **rich** library for styled output.
 
 Key capabilities
 
@@ -59,17 +58,13 @@ logs/
 ├── raw/      # RAW_*.csv written here
 ├── clean/    # CLEAN_*.csv written here
 └── reports/  # summary statistics & decoded tables (auto‑created)
-```
 
-> **Tip** : All folders are created on‑the‑fly if they do not exist.
-
----
 
 ## Python Scripts
 
 | Script                              | Purpose                                                                                                                                                                                                                                   |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `logs.py`(alias: process_logs.py) | End‑to‑end pipeline that converts ``** → RAW CSV → CLEAN CSV**, prints rich‑style stats, and stores artefacts under `logs/raw`,`logs/clean`.                                                                                     |
+| `logs.py` | End‑to‑end pipeline that converts ``** → RAW CSV → CLEAN CSV**, prints rich‑style stats, and stores artefacts under `logs/raw`,`logs/clean`.                                                                                     |
 | `summary.py`                      | Post‑processing helper that ingests**CLEAN CSV**files plus parameter glossaries to generate summaries, decoded error tables, anomaly flags, and share‑ready plots. Accepts single files (`--csv`) or whole folders (`--dir`). |
 
 ---
@@ -88,27 +83,11 @@ python process_logs.py         # 2. run the script
 
 After each run the script assembles a small bundle of value‑added artefacts inside ``.  The following table describes the contents (adapted from  *README.txt* ):
 
-| # | File                                                                         | Purpose                                                                                                                                                                                  |
-| - | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 | `parameter_glossary.csv`/ **origin** :*Parameter_sheet.xlsx*       | Filtered glossary of every ArduPilot parameter (name, units, category, description). Useful for look‑ups & dashboard labels.                                                            |
-| 2 | `subsys_ecode_report.csv`/ **origin** :*SubSys_ErrCode_Sheet.xlsx* | Decoded mapping of `Subsys`+`ECode`pairs to human‑readable subsystem fault descriptions.                                                                                            |
-| 3 | `summary.csv`                                                              | High‑level flight statistics – duration, max altitude/voltage/current, mean current draw, vibration, max roll/pitch etc.                                                               |
-| 4 | `status_text_log.csv`                                                      | All `STATUSTEXT`strings emitted by the autopilot (e.g. *"PreArm: Compass not calibrated"* , *"EKF variance"* ).                                                                    |
-| 5 | `failsafe_report.csv`                                                      | Timeline of Radio / Battery / GCS failsafes.  Booleans indicate which flag tripped at each timestamp.                                                                                    |
-| 6 | `anomaly_flags.csv`                                                        | Row‑wise flags produced by simple heuristics:•**High Vibration**≥ 30 (VibeX/Y/Z)•**Low Voltage**< 10.5 V•**High Current**> 50 A•**GPS Loss**< 6 sats |
-| 7 | `plots/`(folder)                                                           | PNG plots*plus*their raw `.csv`source for: altitude‑vs‑time, throttle‑vs‑altitude, 2‑D GPS path, roll‑pitch‑yaw, vibration, …                                                |
-
-*If **`subsys_ecode_report.csv`** or **`failsafe_report.csv`** are absent the flight contained no relevant events.*
-
----
-
-## Customisation Pointers
-
-* Change destination folders by tweaking `RAW_DIR`, `CLEAN_DIR`, or `REPORT_DIR` constants at the top of  *process_logs.py* .
-* Extend `analyze_dataframe()` with your own KPIs or matplotlib visualisations.
-* Edit `ANOMALY_RULES` dict (inside the script) to alter threshold logic for `anomaly_flags.csv`.
-
----
+| # | File                                                                | Purpose                                                                                                                       |
+| - | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1 | `params.csv`/ **origin** :*Parameter_sheet.xlsx*          | Filtered glossary of every ArduPilot parameter (name, units, category, description). Useful for look‑ups & dashboard labels. |
+| 2 | `subSys_err.csv`/ **origin** :*SubSys_ErrCode_Sheet.xlsx* | Decoded mapping of `Subsys`+`ECode`pairs to human‑readable subsystem fault descriptions.                                 |
+| 3 | `summary.csv`                                                     | High‑level flight statistics – duration, max altitude/voltage/current, mean current draw, vibration, max roll/pitch etc.    |
 
 ## Example Session
 
@@ -137,12 +116,8 @@ pip install pandas matplotlib numpy openpyxl
 ```
 project_folder/
 ├── summary.py
-├── Parameter_sheet.xlsx          ← parameter glossary
-├── SubSys_ErrCode_Sheet.xlsx     ← SubSys + ECode decoder
-└── cleaned_logs/                 ← your “clean” CSVs
-    ├── log_001_clean.csv
-    ├── log_002_clean.csv
-    └── …
+├── params.csv          ← parameter glossary
+└── subSys_err.csv     ← SubSys + ECode decoder
 ```
 
 ### 3. Process a single log (spot‑check)
@@ -170,16 +145,11 @@ python summary.py \
 
 ### 5. What’s inside each output folder
 
-| File                        | Purpose                                               |
-| --------------------------- | ----------------------------------------------------- |
-| `summary.csv`             | Flight duration, battery min/max, vibration peaks, … |
-| `parameter_glossary.csv`  | Decoded parameters (filtered glossary)                |
-| `subsys_ecode_report.csv` | `Subsys`/`ECode`ERR events, human‑readable       |
-| `status_text_log.csv`     | `STATUSTEXT`messages                                |
-| `failsafe_report.csv`     | Radio/Battery/GCS failsafe timeline                   |
-| `anomaly_flags.csv`       | High‑vibe, low‑volt, GPS‑loss flags                |
-| `plots/`                  | Ready‑to‑share PNGs + CSV data                      |
-| `full_export.zip`         | Everything above, zipped                              |
+| File               | Purpose                                               |
+| ------------------ | ----------------------------------------------------- |
+| `summary.csv`    | Flight duration, battery min/max, vibration peaks, … |
+| `params.csv`     | Decoded parameters (filtered glossary)                |
+| `subSys_err.csv` | `Subsys`/`ECode`ERR events, human‑readable       |
 
 ### 6. Common tweaks
 
